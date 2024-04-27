@@ -7,9 +7,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface UserService {
-    User createUser(UserDTO userDto);
-    User updateUser(Long id, UserDTO userDto);
-    User patchUpdateUser(Long id, UserDTO userDto);
-    void deleteUser(Long id);
+    User create(UserDTO userDto);
+    User update(Long id, UserDTO userDto);
+    User patchUpdate(Long id, UserDTO userDto);
+    void delete(Long id);
     List<User> findByBirthDateRange(LocalDate start, LocalDate end);
 }
