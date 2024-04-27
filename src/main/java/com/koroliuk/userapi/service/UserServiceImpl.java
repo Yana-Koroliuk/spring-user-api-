@@ -27,7 +27,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User createUser(UserDTO userDto) {
+    public User create(UserDTO userDto) {
         if (!isAgeValid(userDto.getBirthDate())) {
             throw new IllegalArgumentException("User must be at least " + minimumAge + " years old.");
         }
@@ -44,26 +44,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(Long id, UserDTO userDto) {
+    public User update(Long id, UserDTO userDto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
-
-        user.setEmail(userDto.getEmail());
-        user.setFirstName(userDto.getFirstName());
-        user.setLastName(userDto.getLastName());
         if (isAgeValid(userDto.getBirthDate())) {
             user.setBirthDate(userDto.getBirthDate());
         } else {
             throw new IllegalArgumentException("User must be at least " + minimumAge + " years old.");
         }
-
+        user.setEmail(userDto.getEmail());
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
         user.setAddress(userDto.getAddress());
         user.setPhoneNumber(userDto.getPhoneNumber());
 
         return userRepository.save(user);
     }
 
-    public User patchUpdateUser(Long id, UserDTO userDto) {
+    public User patchUpdate(Long id, UserDTO userDto) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
 
@@ -76,12 +74,11 @@ public class UserServiceImpl implements UserService {
         if (userDto.getBirthDate() != null && isBirthDateChangedAndValid(existingUser.getBirthDate(), userDto.getBirthDate())) {
             existingUser.setBirthDate(userDto.getBirthDate());
         }
-
         return userRepository.save(existingUser);
     }
 
     @Override
-    public void deleteUser(Long id) {
+    public void delete(Long id) {
         if (!userRepository.existsById(id)) {
             throw new EntityNotFoundException("User with id " + id + " not found");
         }
@@ -90,10 +87,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> findByBirthDateRange(LocalDate start, LocalDate end) {
-        if (start.isAfter(end)) {
-            throw new IllegalArgumentException("The 'from' date must be before the 'to' date.");
+        if (start != null && end != null) {
+            if (start.isAfter(end)) {
+                throw new IllegalArgumentException("The 'from' date must be before the 'to' date.");
+            }
+            return userRepository.findByBirthDateBetween(start, end);
+        } else if (start != null) {
+            return userRepository.findByBirthDateAfter(start);
+        } else if (end != null) {
+            return userRepository.findByBirthDateBefore(end);
+        } else {
+            return userRepository.findAll();
         }
-        return userRepository.findByBirthDateBetween(start, end);
     }
 
     private boolean isAgeValid(LocalDate birthDate) {
@@ -104,7 +109,10 @@ public class UserServiceImpl implements UserService {
         if (newBirthDate.equals(currentBirthDate)) {
             return false;
         }
-        return isAgeValid(newBirthDate);
+        if (!isAgeValid(newBirthDate)) {
+            throw new IllegalArgumentException("User must be at least " + minimumAge + " years old.");
+        } else {
+            return true;
+        }
     }
-
 }

@@ -11,4 +11,6 @@ import java.util.List;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByBirthDateBetween(LocalDate start, LocalDate end);
+    List<User> findByBirthDateAfter(LocalDate start);
+    List<User> findByBirthDateBefore(LocalDate end);
 }
