@@ -42,6 +42,42 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    @Override
+    public User updateUser(Long id, UserDTO userDto) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+
+        user.setEmail(userDto.getEmail());
+        user.setFirstName(userDto.getFirstName());
+        user.setLastName(userDto.getLastName());
+        if (isAgeValid(userDto.getBirthDate())) {
+            user.setBirthDate(userDto.getBirthDate());
+        } else {
+            throw new IllegalArgumentException("User must be at least " + minimumAge + " years old.");
+        }
+
+        user.setAddress(userDto.getAddress());
+        user.setPhoneNumber(userDto.getPhoneNumber());
+
+        return userRepository.save(user);
+    }
+
+    @Override
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new EntityNotFoundException("User with id " + id + " not found");
+        }
+        userRepository.deleteById(id);
+    }
+
+    @Override
+    public List<User> findByBirthDateRange(LocalDate start, LocalDate end) {
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("The 'from' date must be before the 'to' date.");
+        }
+        return userRepository.findByBirthDateBetween(start, end);
+    }
+
     private boolean isAgeValid(LocalDate birthDate) {
         return Period.between(birthDate, LocalDate.now()).getYears() >= minimumAge;
     }
