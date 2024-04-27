@@ -3,6 +3,7 @@ package com.koroliuk.userapi.service;
 import com.koroliuk.userapi.dto.UserDTO;
 import com.koroliuk.userapi.model.User;
 import com.koroliuk.userapi.repository.UserRepository;
+import com.koroliuk.userapi.validation.UpdateUtils;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,6 +63,23 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    public User patchUpdateUser(Long id, UserDTO userDto) {
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User with id " + id + " not found"));
+
+        UpdateUtils.updateIfChanged(existingUser::setEmail, userDto.getEmail(), existingUser::getEmail);
+        UpdateUtils.updateIfChanged(existingUser::setFirstName, userDto.getFirstName(), existingUser::getFirstName);
+        UpdateUtils.updateIfChanged(existingUser::setLastName, userDto.getLastName(), existingUser::getLastName);
+        UpdateUtils.updateIfChanged(existingUser::setAddress, userDto.getAddress(), existingUser::getAddress);
+        UpdateUtils.updateIfChanged(existingUser::setPhoneNumber, userDto.getPhoneNumber(), existingUser::getPhoneNumber);
+
+        if (userDto.getBirthDate() != null && isBirthDateChangedAndValid(existingUser.getBirthDate(), userDto.getBirthDate())) {
+            existingUser.setBirthDate(userDto.getBirthDate());
+        }
+
+        return userRepository.save(existingUser);
+    }
+
     @Override
     public void deleteUser(Long id) {
         if (!userRepository.existsById(id)) {
@@ -80,6 +98,13 @@ public class UserServiceImpl implements UserService {
 
     private boolean isAgeValid(LocalDate birthDate) {
         return Period.between(birthDate, LocalDate.now()).getYears() >= minimumAge;
+    }
+
+    private boolean isBirthDateChangedAndValid(LocalDate currentBirthDate, LocalDate newBirthDate) {
+        if (newBirthDate.equals(currentBirthDate)) {
+            return false;
+        }
+        return isAgeValid(newBirthDate);
     }
 
 }
