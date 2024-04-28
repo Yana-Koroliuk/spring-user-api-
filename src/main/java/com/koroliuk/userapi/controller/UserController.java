@@ -2,7 +2,7 @@ package com.koroliuk.userapi.controller;
 
 import com.koroliuk.userapi.dto.UserDTO;
 import com.koroliuk.userapi.model.User;
-import com.koroliuk.userapi.service.UserServiceImpl;
+import com.koroliuk.userapi.service.UserService;
 import com.koroliuk.userapi.validation.OnPatch;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +18,10 @@ import java.util.List;
 @RequestMapping("/users")
 public class UserController {
 
-    private final UserServiceImpl userService;
+    private final UserService userService;
 
     @Autowired
-    public UserController(UserServiceImpl userService) {
+    public UserController(UserService userService) {
         this.userService = userService;
     }
 
